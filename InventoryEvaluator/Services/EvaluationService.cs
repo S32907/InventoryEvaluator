@@ -11,6 +11,7 @@ public class EvaluationService
     private static readonly string Data =
         Path.Combine("..", "..", "..", "Data", "data.json");
     private static readonly HttpClient Client = new();
+    private readonly SemaphoreSlim _rateLimiter = new SemaphoreSlim(3);
 
     public void GetItemsFromJson()
     {
@@ -20,18 +21,27 @@ public class EvaluationService
 
     public async Task EvaluateItems()
     {
-        foreach (var item in Items)
-        {
-            try
+        //clear previously stored statistic
+        EvaluatedItems.Clear();
+        
+        var tasks = Items.Select(async item =>
             {
-                await EvaluateItem(item.Name, item.Amount);
-            } catch(Exception e)
-            {
-                Console.WriteLine($"Error occured for item {item.Name}: {e.Message}");
+                await _rateLimiter.WaitAsync(); 
+                try
+                {
+                    await EvaluateItem(item.Name, item.Amount);
+                    await Task.Delay(1000);
+                } catch(Exception e)
+                {
+                    Console.WriteLine($"Error occured for item {item.Name}: {e.Message}");
+                }
+                finally
+                {
+                    _rateLimiter.Release();
+                }
             }
-        }
-        //delay so 429(Too Many Requests) is not triggered
-        await Task.Delay(400);
+        );
+        await  Task.WhenAll(tasks);
     }
 
     private async Task EvaluateItem(string itemName, int amount)
@@ -67,7 +77,7 @@ public class EvaluationService
             return;
         }
         
-        var averageSellPrice = topSellers.Average(o => o.Price);
+        var averageSellPrice = (int)Math.Round(topSellers.Average(o => o.Price));
         var buyPrice = topBuyer?.Price ?? 0;
         
         //create evaluated items

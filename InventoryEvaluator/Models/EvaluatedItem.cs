@@ -4,9 +4,9 @@ public class EvaluatedItem
 {
     public string Name { get; set; } = "";
     public int Amount { get; set; }  
-    public double AvgSellPrice { get; set; } 
-    public double HighestBuyPrice { get; set; }
-    public double TotalSellPrice { get; set; }
+    public int AvgSellPrice { get; set; } 
+    public int HighestBuyPrice { get; set; }
+    public int TotalSellPrice { get; set; }
 
     public override string ToString()
     {

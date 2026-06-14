@@ -1,14 +1,26 @@
 ﻿using System.Text.Json;
 using InventoryEvaluator.Models;
 using InventoryEvaluator.Services;
+using InventoryEvaluator.Visual;
 
-var evaluationService = new EvaluationService();
-evaluationService.GetItemsFromJson();
-await evaluationService.EvaluateItems();
-
-foreach (var item in evaluationService.EvaluatedItems)
+namespace InventoryEvaluator
 {
-    Console.WriteLine(item);
+    internal static class Program
+    {
+        [STAThread] 
+        private static async Task Main()
+        {
+            var evaluationService = new EvaluationService();
+            evaluationService.GetItemsFromJson();
+            await evaluationService.EvaluateItems();
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+            Application.Run(new ResultFrame(evaluationService)); 
+        }
+    }
 }
-Console.WriteLine("Total items Price: " + (int)evaluationService.GetTotalSellPrice());
+
+
+
+
   
